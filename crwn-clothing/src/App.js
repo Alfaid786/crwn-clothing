@@ -5,16 +5,7 @@ import Header from "./components/header/header.component.jsx";
 import HomePage from "./pages/Homepage/homepage.component.jsx";
 import ShopPage from "./pages/ShopPage/shopPage.component.jsx";
 import SignInAndSignOut from "./pages/sign-in-sign-out/sign-in-sign-out.component.jsx";
-import { auth } from "./firebase/firebase.utils";
-
-const HatsPage = (props) => {
-  console.log(props);
-  return (
-    <div>
-      <h1> HATS Page</h1>
-    </div>
-  );
-};
+import { auth, createUserProfileDocument } from "./firebase/firebase.utils";
 
 const TopicList = (props) => {
   console.log(props);
@@ -46,9 +37,25 @@ class App extends Component {
   unSubscribeFromAuth = null;
 
   componentDidMount() {
-    this.unSubscribeFromAuth = auth.onAuthStateChanged((user) => {
-      this.setState({ currentUser: user });
-      console.log(user);
+    this.unSubscribeFromAuth = auth.onAuthStateChanged(async (userAuth) => {
+      if (userAuth) {
+        const userRef = await createUserProfileDocument(userAuth);
+
+        userRef.onSnapshot((snapShot) => {
+          this.setState(
+            {
+              currentUser: {
+                id: snapShot.id,
+                ...snapShot.data(),
+              },
+            },
+            () => {
+              console.log(this.state);
+            }
+          );
+        });
+      }
+      this.setState({ currentUser: userAuth });
     });
   }
 
